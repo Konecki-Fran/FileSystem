@@ -2,6 +2,10 @@
 .env
 .env.*
 
+# Build output
+**/bin/
+**/obj/
+
 # IDE
 .idea/
 .vscode/
