@@ -1,4 +1,5 @@
 using F24.Models.DTOs;
+using F24.Models.Requests;
 using F24.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,9 +10,22 @@ namespace F24.Controllers;
 public sealed class FoldersController(FileSystemService service) : ControllerBase
 {
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<FolderContentsDto>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<FolderContentsDto>> Get([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var folder = await service.GetFolderAsync(id, cancellationToken);
-        return folder is null ? NotFound() : Ok(folder);
+        return Ok(await service.GetFolderAsync(id, cancellationToken));
+    }
+
+    [HttpPost("{id:guid}")]
+    public async Task<ActionResult<EntryDto>> Create([FromRoute] Guid id, [FromBody] CreateEntryRequest request,
+        CancellationToken cancellationToken)
+    {
+        return CreatedAtAction(nameof(Get), new { id }, await service.CreateAsync(id, request, cancellationToken));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        await service.DeleteFolderAsync(id, cancellationToken);
+        return NoContent();
     }
 }

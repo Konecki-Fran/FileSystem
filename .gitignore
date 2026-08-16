@@ -10,6 +10,8 @@
 .idea/
 .vscode/
 .vs/
+*.DotSettings.user
 
 # Docker
 *.log
+

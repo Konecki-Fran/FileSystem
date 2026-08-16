@@ -1,23 +1,53 @@
+using System.Text.Json.Serialization;
+using F24.Middleware;
 using F24.Repositories;
 using F24.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 LoadEnvironmentFile(Path.Combine(AppContext.BaseDirectory, ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = context =>
+    {
+        var message = context.ModelState.Values
+            .SelectMany(value => value.Errors)
+            .Select(error =>
+                string.IsNullOrWhiteSpace(error.ErrorMessage) ? "The request is invalid." : error.ErrorMessage)
+            .FirstOrDefault() ?? "The request is invalid.";
+        return new BadRequestObjectResult(new { error = new { code = "INVALID_REQUEST", message } });
+    })
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddScoped<FileSystemService>();
 builder.Services.AddScoped<IFileSystemRepository, FileSystemRepository>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(BuildConnectionString(builder.Configuration)));
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.MapGet("/", async (AppDbContext db, CancellationToken cancellationToken) =>
+{
+    var root = await db.Folders.AsNoTracking().SingleAsync(x => x.ParentId == null, cancellationToken);
+    return Results.Redirect($"/folders/{root.Id}");
+});
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+app.MapGet("/health/db", async (AppDbContext db, CancellationToken cancellationToken) =>
+    await db.Database.CanConnectAsync(cancellationToken)
+        ? Results.Ok(new { status = "healthy", database = "connected" })
+        : Results.Json(new { status = "unhealthy", database = "disconnected" }, statusCode: 503));
 app.MapControllers();
 app.Run();
 
-static string BuildConnectionString(IConfiguration configuration) =>
-    $"Host=localhost;Port={configuration["POSTGRES_PORT"]};Database={configuration["POSTGRES_DB"]};Username={configuration["POSTGRES_USER"]};Password={configuration["POSTGRES_PASSWORD"]}";
+static string BuildConnectionString(IConfiguration configuration)
+{
+    return
+        $"Host=localhost;Port={configuration["POSTGRES_PORT"]};Database={configuration["POSTGRES_DB"]};Username={configuration["POSTGRES_USER"]};Password={configuration["POSTGRES_PASSWORD"]}";
+}
 
 static void LoadEnvironmentFile(string path)
 {
@@ -35,4 +65,6 @@ static void LoadEnvironmentFile(string path)
     }
 }
 
-public partial class Program { }
+public partial class Program
+{
+}

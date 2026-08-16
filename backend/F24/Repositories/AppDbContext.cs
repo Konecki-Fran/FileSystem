@@ -19,6 +19,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.ParentId).HasColumnName("parent_id");
             entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
             entity.Property(x => x.Path).HasColumnName("path").HasMaxLength(255).IsRequired();
+            entity.HasOne<Folder>().WithMany().HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<File>(entity =>
@@ -28,6 +29,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
             entity.Property(x => x.ParentId).HasColumnName("parent_id");
             entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
+            entity.HasOne<Folder>().WithMany().HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
