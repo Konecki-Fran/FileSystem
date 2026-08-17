@@ -18,7 +18,9 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
             context.Response.StatusCode = 499;
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
-                { error = new { code = "REQUEST_CANCELLED", message = "The request was cancelled." } }));
+            {
+                error = new { code = "REQUEST_CANCELLED", message = "The request was cancelled." }
+            }));
         }
         catch (Exception exception)
         {

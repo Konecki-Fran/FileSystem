@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - run: dotnet restore backend/F24.sln
+      - run: dotnet format backend/F24.sln --verify-no-changes --no-restore
+      - run: dotnet build backend/F24.sln --no-restore
+      - run: dotnet test backend/F24.sln --no-build
+
+      # The current project owns its database schema in db/schema.sql, not EF migrations.
+      - name: Validate SQL schema source
+        if: ${{ hashFiles('backend/**/Migrations/*.cs') == '' }}
+        run: test -f db/schema.sql
+
+      # This becomes active automatically if EF Core migrations are added later.
+      - name: Validate EF Core migrations
+        if: ${{ hashFiles('backend/**/Migrations/*.cs') != '' }}
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          dotnet ef migrations list --project backend/F24 --startup-project backend/F24 --no-build --no-connect
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Start PostgreSQL with test data
+        working-directory: .
+        env:
+          POSTGRES_DB: f24
+          POSTGRES_USER: f24
+          POSTGRES_PASSWORD: f24-test-password
+          POSTGRES_PORT: 5432
+        run: docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+
+      - name: Start API
+        working-directory: .
+        env:
+          POSTGRES_DB: f24
+          POSTGRES_USER: f24
+          POSTGRES_PASSWORD: f24-test-password
+          POSTGRES_PORT: 5432
+        run: dotnet run --project backend/F24 --configuration Release --no-launch-profile --urls http://127.0.0.1:5000 > /tmp/f24-api.log 2>&1 &
+
+      - name: Wait for API
+        working-directory: .
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5000/health/db; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/f24-api.log
+          exit 1
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          if-no-files-found: ignore
+
+      - name: Print API logs
+        if: ${{ failure() }}
+        working-directory: .
+        run: cat /tmp/f24-api.log
