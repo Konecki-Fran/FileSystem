@@ -25,8 +25,11 @@ builder.Services.AddScoped<FileSystemService>();
 builder.Services.AddScoped<IFileSystemRepository, FileSystemRepository>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(BuildConnectionString(builder.Configuration)));
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

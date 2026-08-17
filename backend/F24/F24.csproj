@@ -5,8 +5,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3"/>
-        <None Include="../../.env" Link=".env" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../.env')"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <None Include="../../.env" Link=".env" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../.env')" />
     </ItemGroup>
 </Project>

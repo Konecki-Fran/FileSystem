@@ -1,0 +1,1585 @@
+{
+  "info": {
+    "_postman_id": "c3532252-f679-42a6-a49c-a6530bccca52",
+    "name": "F24 File System API",
+    "description": "Comprehensive API test collection for F24 File System with health checks, navigation, CRUD operations, validation, and search functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "3811256"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Status equals healthy', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('healthy');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /health/db",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Status equals healthy', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('healthy');",
+                  "});",
+                  "",
+                  "pm.test('Database equals connected', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.database).to.equal('connected');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/db",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "db"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Root navigation",
+      "item": [
+        {
+          "name": "GET / (redirect)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is redirect (3xx)', function () {",
+                  "    pm.expect([301, 302, 303, 307, 308]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Location header is present', function () {",
+                  "    pm.response.to.have.header('Location');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /folders/{{rootFolderId}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Name is home', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.equal('home');",
+                  "});",
+                  "",
+                  "pm.test('ParentId is null', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.parentId).to.be.null;",
+                  "});",
+                  "",
+                  "pm.test('Children include documents, images, and Readme.txt', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var childNames = jsonData.children.map(function(child) { return child.name; });",
+                  "    pm.expect(childNames).to.include('documents');",
+                  "    pm.expect(childNames).to.include('images');",
+                  "    pm.expect(childNames).to.include('Readme.txt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /folders/{{documentsFolderId}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Path is home/documents', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.path).to.equal('home/documents');",
+                  "});",
+                  "",
+                  "pm.test('Children include projects and budget.xlsx', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var childNames = jsonData.children.map(function(child) { return child.name; });",
+                  "    pm.expect(childNames).to.include('projects');",
+                  "    pm.expect(childNames).to.include('budget.xlsx');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{documentsFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{documentsFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /folders/11111111-1111-1111-1111-111111111111 (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is NOT_FOUND', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/11111111-1111-1111-1111-111111111111",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "11111111-1111-1111-1111-111111111111"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Navigation and retrieval of root folder structure"
+    },
+    {
+      "name": "Create temporary test data",
+      "item": [
+        {
+          "name": "POST /folders/{{rootFolderId}} (create folder)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response contains id', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "});",
+                  "",
+                  "pm.test('Save created folder ID', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('createdFolderId', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{testName}}-folder\", \"type\": \"folder\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/{{rootFolderId}} (create file)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response contains id', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "});",
+                  "",
+                  "pm.test('Save created file ID', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('createdFileId', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{testName}}-file.txt\", \"type\": \"file\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /folders/{{rootFolderId}} (verify created items)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Children include both temporary items', function () {",
+                  "    const names = pm.response.json().children.map(x => x.name);",
+                  "    pm.expect(names).to.include(`${pm.collectionVariables.get(\"testName\")}-folder`);",
+                  "    pm.expect(names).to.include(`${pm.collectionVariables.get(\"testName\")}-file.txt`);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Create temporary test data (folder and file) for subsequent tests",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var timestamp = new Date().getTime();",
+              "pm.environment.set('uniqueName', 'test-' + timestamp);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validation and conflict cases",
+      "item": [
+        {
+          "name": "POST /folders/{{rootFolderId}} (duplicate name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is NAME_ALREADY_EXISTS', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('NAME_ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{testName}}-folder\", \"type\": \"folder\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/{{rootFolderId}} (empty name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_REQUEST', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"\", \"type\": \"Folder\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/{{rootFolderId}} (forbidden separator)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_REQUEST', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"bad/name\", \"type\": \"Folder\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/{{rootFolderId}} (invalid enum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_REQUEST', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"test\", \"type\": \"Unknown\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/{{rootFolderId}} (numeric enum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_REQUEST', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"test\", \"type\": 1}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/99999999-9999-9999-9999-999999999999 (missing parent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is NOT_FOUND', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"test\", \"type\": \"Folder\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/99999999-9999-9999-9999-999999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "99999999-9999-9999-9999-999999999999"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Test validation and error handling for various conflict scenarios"
+    },
+    {
+      "name": "Delete file",
+      "item": [
+        {
+          "name": "DELETE /files/{{createdFileId}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('Response body is empty', function () {",
+                  "    pm.expect(pm.response.text()).to.equal('');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/files/{{createdFileId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files",
+                "{{createdFileId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /files/{{createdFileId}} (repeat delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is NOT_FOUND', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/files/{{createdFileId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files",
+                "{{createdFileId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Test file deletion and verify idempotency"
+    },
+    {
+      "name": "Recursive folder deletion",
+      "item": [
+        {
+          "name": "POST /folders/{{createdFolderId}} (create nested folder)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response contains id', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "});",
+                  "",
+                  "pm.test('Save nested folder ID', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('nestedFolderId', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{uniqueName}}-nested\", \"type\": \"Folder\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{createdFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{createdFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /folders/{{nestedFolderId}} (create file in nested)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response contains id', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "});",
+                  "",
+                  "pm.test('Save nested file ID', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('nestedFileId', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"{{uniqueName}}-nested-file.txt\", \"type\": \"File\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{nestedFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{nestedFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /folders/{{createdFolderId}} (delete parent folder)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('Response body is empty', function () {",
+                  "    pm.expect(pm.response.text()).to.equal('');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{createdFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{createdFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /folders/{{nestedFolderId}} (verify recursive deletion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is NOT_FOUND', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{nestedFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{nestedFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /folders/{{rootFolderId}} (verify root protected)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is CANNOT_DELETE_ROOT', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('CANNOT_DELETE_ROOT');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{rootFolderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "folders",
+                "{{rootFolderId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Test recursive deletion of folders with nested content"
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "GET /search?prefix=re&limit=10 (global prefix search)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Includes Readme.txt', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var names = jsonData.map(function(item) { return item.name; });",
+                  "    pm.expect(names).to.include('Readme.txt');",
+                  "});",
+                  "",
+                  "pm.test('All names start with re (case-insensitive)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(item) {",
+                  "        pm.expect(item.name.toLowerCase()).to.match(/^re/);",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test('Count is less than or equal to 10', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.at.most(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=re&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "re"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?prefix=READ&limit=10 (case-insensitive search)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Includes Readme.txt', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var names = jsonData.map(function(item) { return item.name; });",
+                  "    pm.expect(names).to.include('Readme.txt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=READ&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "READ"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?prefix=f&folder={{documentsFolderId}}&limit=10 (scoped subtree search)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Includes f24-notes.md', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var names = jsonData.map(function(item) { return item.name; });",
+                  "    pm.expect(names).to.include('f24-notes.md');",
+                  "});",
+                  "",
+                  "pm.test('f24-notes.md path contains home/documents/projects', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var f24Item = jsonData.find(function(item) { return item.name === 'f24-notes.md'; });",
+                  "    pm.expect(f24Item.path).to.include('home/documents/projects');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=f&folder={{documentsFolderId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "f"
+                },
+                {
+                  "key": "folder",
+                  "value": "{{documentsFolderId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?prefix=fo&folder={{documentsFolderId}}&limit=10 (scoped excludes other folders)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Result is empty array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.equal(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=fo&folder={{documentsFolderId}}&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "fo"
+                },
+                {
+                  "key": "folder",
+                  "value": "{{documentsFolderId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?prefix=does-not-exist&limit=10 (no results)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Result is empty array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.equal(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=does-not-exist&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "does-not-exist"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?limit=10 (missing prefix)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_REQUEST', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?prefix=re&limit=0 (invalid limit too low)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_LIMIT', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_LIMIT');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=re&limit=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "re"
+                },
+                {
+                  "key": "limit",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /search?prefix=re&limit=11 (invalid limit too high)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test('Error code is INVALID_LIMIT', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.code).to.equal('INVALID_LIMIT');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?prefix=re&limit=11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "prefix",
+                  "value": "re"
+                },
+                {
+                  "key": "limit",
+                  "value": "11"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Test search functionality with various query parameters"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get(\"testName\")) {",
+          "  pm.collectionVariables.set(\"testName\", `test-${Date.now()}`);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "rootFolderId",
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "key": "documentsFolderId",
+      "value": "10000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "projectsFolderId",
+      "value": "10000000-0000-0000-0000-000000000002"
+    },
+    {
+      "key": "imagesFolderId",
+      "value": "10000000-0000-0000-0000-000000000003"
+    },
+    {
+      "key": "createdFolderId",
+      "value": ""
+    },
+    {
+      "key": "createdFileId",
+      "value": ""
+    },
+    {
+      "key": "nestedFolderId",
+      "value": ""
+    },
+    {
+      "key": "nestedFileId",
+      "value": ""
+    },
+    {
+      "key": "uniqueName",
+      "value": ""
+    },
+    {
+      "key": "testName",
+      "value": ""
+    }
+  ]
+}
