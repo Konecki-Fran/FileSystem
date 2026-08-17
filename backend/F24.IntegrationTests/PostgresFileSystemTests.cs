@@ -74,28 +74,46 @@ public sealed class PostgresFileSystemTests(PostgresFixture fixture)
     {
         await fixture.ResetAsync();
 
-        static async Task<Exception?> CreateAsync(PostgresFixture fixture, EntryType type)
+        var readyCount = 0;
+        var bothTransactionsReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        async Task<Exception?> InsertAsync(EntryType type)
         {
-            await using var context = fixture.CreateContext();
-            var service = new FileSystemService(new FileSystemRepository(context));
+            await using var connection = new NpgsqlConnection(fixture.ConnectionString);
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+
+            if (Interlocked.Increment(ref readyCount) == 2)
+                bothTransactionsReady.SetResult();
+            await bothTransactionsReady.Task;
+
             try
             {
-                await service.CreateAsync(RootId,
-                    new CreateEntryRequest { Name = "SharedName", Type = type }, CancellationToken.None);
+                var table = type == EntryType.File ? "files" : "folders";
+                await using var command = new NpgsqlCommand(
+                    $"INSERT INTO {table} (id, parent_id, name) VALUES (@id, @parentId, @name)",
+                    connection, transaction);
+                command.Parameters.AddWithValue("id", Guid.NewGuid());
+                command.Parameters.AddWithValue("parentId", RootId);
+                command.Parameters.AddWithValue("name", "SharedName");
+                await command.ExecuteNonQueryAsync();
+                await transaction.CommitAsync();
                 return null;
             }
             catch (Exception exception)
             {
+                await transaction.RollbackAsync();
                 return exception;
             }
         }
 
         var results = await Task.WhenAll(
-            CreateAsync(fixture, EntryType.File),
-            CreateAsync(fixture, EntryType.Folder));
+            InsertAsync(EntryType.File),
+            InsertAsync(EntryType.Folder));
 
         Assert.Single(results, result => result is null);
-        Assert.Single(results, result => result is DbUpdateException);
+        Assert.Single(results,
+            result => result is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation });
 
         await using var verification = fixture.CreateContext();
         var count = await verification.Files.CountAsync(file => file.ParentId == RootId && file.Name == "SharedName")
