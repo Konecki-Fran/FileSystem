@@ -7,6 +7,6 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3"/>
-        <None Include="../../.env" Link=".env" CopyToOutputDirectory="PreserveNewest"/>
+        <None Include="../../.env" Link=".env" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../.env')"/>
     </ItemGroup>
 </Project>
