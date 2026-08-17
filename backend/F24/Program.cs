@@ -45,8 +45,11 @@ app.Run();
 
 static string BuildConnectionString(IConfiguration configuration)
 {
+    var host = configuration["POSTGRES_HOST"] ?? "localhost";
+    var port = configuration["POSTGRES_PORT"] ?? "5432";
+
     return
-        $"Host=localhost;Port={configuration["POSTGRES_PORT"]};Database={configuration["POSTGRES_DB"]};Username={configuration["POSTGRES_USER"]};Password={configuration["POSTGRES_PASSWORD"]}";
+        $"Host={host};Port={port};Database={configuration["POSTGRES_DB"]};Username={configuration["POSTGRES_USER"]};Password={configuration["POSTGRES_PASSWORD"]}";
 }
 
 static void LoadEnvironmentFile(string path)
