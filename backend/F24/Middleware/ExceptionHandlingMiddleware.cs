@@ -31,8 +31,10 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 EntryNotFoundException error => (404, error.Code, error.Message),
                 DuplicateNameException error => (409, error.Code, error.Message),
                 CannotDeleteRootException error => (409, error.Code, error.Message),
-                DomainException { Code: "INVALID_LIMIT" or "INVALID_TYPE" } error => (400, error.Code,
+                DomainException { Code: "INVALID_LIMIT" or "INVALID_TYPE" or "INVALID_SEARCH_MODE" } error => (400, error.Code,
                     error.Message),
+                DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } =>
+                    (409, "NAME_ALREADY_EXISTS", "An entry with this name already exists in the folder."),
                 DbUpdateException => (500, "DATABASE_ERROR", "The database operation could not be completed."),
                 NpgsqlException => (500, "DATABASE_ERROR", "The database operation could not be completed."),
                 _ => (500, "INTERNAL_ERROR", "An unexpected error occurred.")

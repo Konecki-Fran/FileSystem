@@ -8,6 +8,8 @@ namespace F24.Controllers;
 public sealed class FilesController(FileSystemService service) : ControllerBase
 {
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         await service.DeleteFileAsync(id, cancellationToken);

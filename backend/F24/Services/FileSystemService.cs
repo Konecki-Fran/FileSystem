@@ -15,8 +15,9 @@ public sealed class FileSystemService(IFileSystemRepository repository)
         var folder = await repository.GetFolderAsync(id, cancellationToken);
         if (folder is null) throw new EntryNotFoundException("Folder not found.");
 
+        var path = await repository.GetFolderPathAsync(id, cancellationToken);
         var children = await repository.GetChildrenAsync(id, cancellationToken);
-        return new FolderContentsDto(folder.Id, folder.Name, folder.ParentId, folder.Path, children);
+        return new FolderContentsDto(folder.Id, folder.Name, folder.ParentId, path, children);
     }
 
     public async Task<EntryDto> CreateAsync(Guid parentId, CreateEntryRequest request,
@@ -25,8 +26,8 @@ public sealed class FileSystemService(IFileSystemRepository repository)
         var name = NameValidator.Normalize(request.Name);
         var type = request.Type;
 
-        var parent = await repository.GetFolderAsync(parentId, cancellationToken)
-                     ?? throw new EntryNotFoundException("Parent folder not found.");
+        _ = await repository.GetFolderAsync(parentId, cancellationToken)
+            ?? throw new EntryNotFoundException("Parent folder not found.");
 
         if (await repository.EntryNameExistsAsync(parentId, name, cancellationToken))
             throw new DuplicateNameException("An entry with this name already exists in the folder.");
@@ -37,16 +38,15 @@ public sealed class FileSystemService(IFileSystemRepository repository)
             {
                 Id = Guid.NewGuid(),
                 ParentId = parentId,
-                Name = name,
-                Path = BuildFolderPath(parent.Path, name)
+                Name = name
             };
-            await repository.AddFolderAsync(folder, cancellationToken);
+            repository.AddFolder(folder);
             await repository.SaveChangesAsync(cancellationToken);
             return new EntryDto(folder.Id, folder.Name, "folder");
         }
 
         var file = new File { Id = Guid.NewGuid(), ParentId = parentId, Name = name };
-        await repository.AddFileAsync(file, cancellationToken);
+        repository.AddFile(file);
         await repository.SaveChangesAsync(cancellationToken);
         return new EntryDto(file.Id, file.Name, "file");
     }
@@ -57,7 +57,7 @@ public sealed class FileSystemService(IFileSystemRepository repository)
                      ?? throw new EntryNotFoundException("Folder not found.");
         if (folder.ParentId is null) throw new CannotDeleteRootException("The root folder cannot be deleted.");
 
-        await repository.DeleteFolderAsync(folder, cancellationToken);
+        repository.DeleteFolder(folder);
         await repository.SaveChangesAsync(cancellationToken);
     }
 
@@ -67,19 +67,21 @@ public sealed class FileSystemService(IFileSystemRepository repository)
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<IReadOnlyList<SearchResultDto>> SearchAsync(string prefix, Guid? folderId, int limit,
+    public async Task<IReadOnlyList<SearchResultDto>> SearchAsync(string query, SearchMode mode, Guid? folderId, int limit,
         CancellationToken cancellationToken)
     {
-        var normalized = NameValidator.Normalize(prefix);
+        var normalized = NameValidator.Normalize(query);
         if (limit is < 1 or > 10)
             throw new DomainException("INVALID_LIMIT", "Limit must be between 1 and 10.");
+        if (mode == SearchMode.ExactCurrent && folderId is null)
+            throw new DomainException("INVALID_SEARCH_MODE", "Exact search requires a current folder.");
+        if (!Enum.IsDefined(mode))
+            throw new DomainException("INVALID_SEARCH_MODE", "Search mode is invalid.");
+        if (mode == SearchMode.ExactCurrent &&
+            await repository.GetFolderAsync(folderId!.Value, cancellationToken) is null)
+            throw new EntryNotFoundException("Folder not found.");
 
-        return repository.SearchAsync(normalized, folderId, limit, cancellationToken);
-    }
-
-    private static string BuildFolderPath(string parentPath, string name)
-    {
-        var full = $"{parentPath}/{name}";
-        return full.Length <= NameValidator.MaxLength ? full : $"...{full[3..]}";
+        return await repository.SearchAsync(normalized, folderId, mode == SearchMode.ExactCurrent, limit,
+            cancellationToken);
     }
 }

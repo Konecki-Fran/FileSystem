@@ -1,4 +1,4 @@
-export type SearchScope = 'all' | 'subtree';
+export type SearchScope = 'all-prefix' | 'exact-current';
 
 interface Props {
   value: SearchScope;
@@ -8,8 +8,8 @@ interface Props {
 export function SearchScopeSelector({ value, onChange }: Props) {
   return (
     <select aria-label="Search scope" value={value} onChange={e => onChange(e.target.value as SearchScope)}>
-      <option value="subtree">Current folder + subfolders</option>
-      <option value="all">All files</option>
+      <option value="all-prefix">Starts with, all files</option>
+      <option value="exact-current">Exact name, current folder</option>
     </select>
   );
 }

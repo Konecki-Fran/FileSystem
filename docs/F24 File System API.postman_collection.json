@@ -453,7 +453,7 @@
             "type": "text/javascript",
             "exec": [
               "var timestamp = new Date().getTime();",
-              "pm.environment.set('uniqueName', 'test-' + timestamp);"
+              "pm.collectionVariables.set('uniqueName', 'test-' + timestamp);"
             ]
           }
         }
@@ -871,7 +871,7 @@
                   "",
                   "pm.test('Save nested folder ID', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('nestedFolderId', jsonData.id);",
+                  "    pm.collectionVariables.set('nestedFolderId', jsonData.id);",
                   "});"
                 ]
               }
@@ -925,7 +925,7 @@
                   "",
                   "pm.test('Save nested file ID', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.environment.set('nestedFileId', jsonData.id);",
+                  "    pm.collectionVariables.set('nestedFileId', jsonData.id);",
                   "});"
                 ]
               }
@@ -1200,7 +1200,7 @@
           "response": []
         },
         {
-          "name": "GET /search?prefix=f&folder={{documentsFolderId}}&limit=10 (scoped subtree search)",
+          "name": "GET /search?prefix=budget.xlsx&mode=ExactCurrent&folder={{documentsFolderId}} (exact in current folder)",
           "event": [
             {
               "listen": "test",
@@ -1220,16 +1220,11 @@
                   "    pm.expect(Array.isArray(jsonData)).to.be.true;",
                   "});",
                   "",
-                  "pm.test('Includes f24-notes.md', function () {",
+                  "pm.test('Returns exactly budget.xlsx', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    var names = jsonData.map(function(item) { return item.name; });",
-                  "    pm.expect(names).to.include('f24-notes.md');",
-                  "});",
-                  "",
-                  "pm.test('f24-notes.md path contains home/documents/projects', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    var f24Item = jsonData.find(function(item) { return item.name === 'f24-notes.md'; });",
-                  "    pm.expect(f24Item.path).to.include('home/documents/projects');",
+                  "    pm.expect(jsonData.length).to.equal(1);",
+                  "    pm.expect(jsonData[0].name).to.equal('budget.xlsx');",
+                  "    pm.expect(jsonData[0].path).to.equal('home/documents/budget.xlsx');",
                   "});"
                 ]
               }
@@ -1239,7 +1234,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/search?prefix=f&folder={{documentsFolderId}}&limit=10",
+              "raw": "{{baseUrl}}/search?prefix=budget.xlsx&mode=ExactCurrent&folder={{documentsFolderId}}&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1249,7 +1244,11 @@
               "query": [
                 {
                   "key": "prefix",
-                  "value": "f"
+                  "value": "budget.xlsx"
+                },
+                {
+                  "key": "mode",
+                  "value": "ExactCurrent"
                 },
                 {
                   "key": "folder",
@@ -1265,7 +1264,7 @@
           "response": []
         },
         {
-          "name": "GET /search?prefix=fo&folder={{documentsFolderId}}&limit=10 (scoped excludes other folders)",
+          "name": "GET /search?prefix=f24-notes.md&mode=ExactCurrent&folder={{documentsFolderId}} (does not search descendants)",
           "event": [
             {
               "listen": "test",
@@ -1297,7 +1296,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/search?prefix=fo&folder={{documentsFolderId}}&limit=10",
+              "raw": "{{baseUrl}}/search?prefix=f24-notes.md&mode=ExactCurrent&folder={{documentsFolderId}}&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1307,7 +1306,11 @@
               "query": [
                 {
                   "key": "prefix",
-                  "value": "fo"
+                  "value": "f24-notes.md"
+                },
+                {
+                  "key": "mode",
+                  "value": "ExactCurrent"
                 },
                 {
                   "key": "folder",

@@ -67,7 +67,9 @@ static void LoadEnvironmentFile(string path)
         var separator = value.IndexOf('=');
         if (separator <= 0) continue;
 
-        Environment.SetEnvironmentVariable(value[..separator].Trim(), value[(separator + 1)..].Trim().Trim('"'));
+        var name = value[..separator].Trim();
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(name)))
+            Environment.SetEnvironmentVariable(name, value[(separator + 1)..].Trim().Trim('"'));
     }
 }
 

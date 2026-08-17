@@ -129,11 +129,12 @@ public sealed class FileSystemServiceTests
         repository.SearchResults = [new SearchResultDto(Guid.NewGuid(), "Readme.txt", "home/Readme.txt", RootId)];
         var service = new FileSystemService(repository);
 
-        var result = await service.SearchAsync("  READ  ", DocumentsId, 10, CancellationToken.None);
+        var result = await service.SearchAsync("  READ  ", SearchMode.ExactCurrent, DocumentsId, 10, CancellationToken.None);
 
         Assert.Single(result);
         Assert.Equal("READ", repository.LastSearchPrefix);
         Assert.Equal(DocumentsId, repository.LastSearchFolderId);
+        Assert.True(repository.LastSearchExact);
     }
 
     [Theory]
@@ -144,7 +145,7 @@ public sealed class FileSystemServiceTests
         var service = new FileSystemService(CreateRepository());
 
         var exception = await Assert.ThrowsAsync<DomainException>(() =>
-            service.SearchAsync("read", null, limit, CancellationToken.None));
+            service.SearchAsync("read", SearchMode.PrefixAll, null, limit, CancellationToken.None));
 
         Assert.Equal("INVALID_LIMIT", exception.Code);
     }
@@ -165,15 +166,15 @@ public sealed class FileSystemServiceTests
         public int SaveChangesCount { get; private set; }
         public string? LastSearchPrefix { get; private set; }
         public Guid? LastSearchFolderId { get; private set; }
+        public bool LastSearchExact { get; private set; }
         public IReadOnlyList<SearchResultDto> SearchResults { get; set; } = [];
 
-        public void AddRoot(Guid id, string name) => folders[id] = new Folder { Id = id, Name = name, Path = name };
+        public void AddRoot(Guid id, string name) => folders[id] = new Folder { Id = id, Name = name };
 
         public Guid AddExistingFolder(Guid parentId, string name, Guid? id = null)
         {
             var folderId = id ?? Guid.NewGuid();
-            var parentPath = folders[parentId].Path;
-            folders[folderId] = new Folder { Id = folderId, ParentId = parentId, Name = name, Path = $"{parentPath}/{name}" };
+            folders[folderId] = new Folder { Id = folderId, ParentId = parentId, Name = name };
             return folderId;
         }
 
@@ -189,6 +190,17 @@ public sealed class FileSystemServiceTests
 
         public Task<Folder?> GetFolderAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(folders.GetValueOrDefault(id));
+
+        public Task<string> GetFolderPathAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var names = new Stack<string>();
+            for (var current = folders[id]; ; current = folders[current.ParentId!.Value])
+            {
+                names.Push(current.Name);
+                if (current.ParentId is null) break;
+            }
+            return Task.FromResult(string.Join('/', names));
+        }
 
         public Task<IReadOnlyList<EntryDto>> GetChildrenAsync(Guid folderId, CancellationToken cancellationToken)
         {
@@ -206,19 +218,11 @@ public sealed class FileSystemServiceTests
                             files.Values.Any(file => file.ParentId == parentId &&
                                                      string.Equals(file.Name, name, StringComparison.OrdinalIgnoreCase)));
 
-        public Task AddFolderAsync(Folder folder, CancellationToken cancellationToken)
-        {
-            folders.Add(folder.Id, folder);
-            return Task.CompletedTask;
-        }
+        public void AddFolder(Folder folder) => folders.Add(folder.Id, folder);
 
-        public Task AddFileAsync(File file, CancellationToken cancellationToken)
-        {
-            files.Add(file.Id, file);
-            return Task.CompletedTask;
-        }
+        public void AddFile(File file) => files.Add(file.Id, file);
 
-        public Task DeleteFolderAsync(Folder folder, CancellationToken cancellationToken)
+        public void DeleteFolder(Folder folder)
         {
             var idsToDelete = new HashSet<Guid> { folder.Id };
             var pending = new Queue<Guid>([folder.Id]);
@@ -235,7 +239,6 @@ public sealed class FileSystemServiceTests
                 files.Remove(fileId);
             foreach (var folderId in idsToDelete)
                 folders.Remove(folderId);
-            return Task.CompletedTask;
         }
 
         public Task DeleteFileAsync(Guid id, CancellationToken cancellationToken)
@@ -244,11 +247,12 @@ public sealed class FileSystemServiceTests
             return Task.CompletedTask;
         }
 
-        public Task<IReadOnlyList<SearchResultDto>> SearchAsync(string prefix, Guid? folderId, int limit,
+        public Task<IReadOnlyList<SearchResultDto>> SearchAsync(string prefix, Guid? folderId, bool exact, int limit,
             CancellationToken cancellationToken)
         {
             LastSearchPrefix = prefix;
             LastSearchFolderId = folderId;
+            LastSearchExact = exact;
             return Task.FromResult(SearchResults);
         }
 

@@ -15,11 +15,7 @@
         "tags": [
           "F24"
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        "responses": { "302": { "description": "Redirect to root folder" } }
       }
     },
     "/health": {
@@ -42,6 +38,9 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "503": {
+            "description": "Database unavailable"
           }
         }
       }
@@ -63,9 +62,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          }
+          "204": { "description": "No Content" },
+          "404": { "description": "Not Found" }
         }
       }
     },
@@ -105,7 +103,8 @@
                 }
               }
             }
-          }
+          },
+          "404": { "description": "Not Found" }
         }
       },
       "post": {
@@ -144,8 +143,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "201": {
+            "description": "Created",
             "content": {
               "text/plain": {
                 "schema": {
@@ -163,7 +162,10 @@
                 }
               }
             }
-          }
+          },
+          "400": { "description": "Bad Request" },
+          "404": { "description": "Not Found" },
+          "409": { "description": "Conflict" }
         }
       },
       "delete": {
@@ -182,9 +184,9 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          }
+          "204": { "description": "No Content" },
+          "404": { "description": "Not Found" },
+          "409": { "description": "Conflict" }
         }
       }
     },
@@ -195,8 +197,9 @@
         ],
         "parameters": [
           {
-            "name": "Prefix",
+            "name": "prefix",
             "in": "query",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -207,6 +210,14 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SearchMode",
+              "default": "PrefixAll"
             }
           },
           {
@@ -225,8 +236,18 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
-          }
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SearchResultDto" }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "404": { "description": "Not Found" }
         }
       }
     }
@@ -235,6 +256,7 @@
     "schemas": {
       "CreateEntryRequest": {
         "required": [
+          "name",
           "type"
         ],
         "type": "object",
@@ -268,7 +290,8 @@
         }
       },
       "EntryType": {
-        "type": "integer"
+        "type": "string",
+        "enum": ["Folder", "File"]
       },
       "FolderContentsDto": {
         "required": [
@@ -303,6 +326,20 @@
               "$ref": "#/components/schemas/EntryDto"
             }
           }
+        }
+      },
+      "SearchMode": {
+        "type": "string",
+        "enum": ["PrefixAll", "ExactCurrent"]
+      },
+      "SearchResultDto": {
+        "required": ["id", "name", "path", "parentId"],
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "path": { "type": "string" },
+          "parentId": { "type": "string", "format": "uuid" }
         }
       }
     }

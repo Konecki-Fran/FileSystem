@@ -1,6 +1,6 @@
 # F24 Browser-Based File System
 
-A small browser-based file system with folders, name-only files, recursive deletion, and filename-prefix search. The application uses a React frontend, an ASP.NET Core API, and PostgreSQL.
+A small browser-based file system with folders, name-only files, recursive deletion, global filename-prefix search, and exact-name search in the current folder. The application uses a React frontend, an ASP.NET Core API, and PostgreSQL.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Copy-Item .env.example .env
 
 The committed example contains an intentionally non-secret development password. For a fresh local database, the API and PostgreSQL containers both receive `POSTGRES_PASSWORD`, so the values must match. The file is ignored by Git and is passed to containers at runtime; it is not copied into Docker images. `FRONTEND_PORT` is optional and defaults to `8080`.
 
-Changing `POSTGRES_PASSWORD` after PostgreSQL has initialized its persistent volume does not change the database user's stored password. Either update the database credentials separately or remove the local volume with `docker compose down -v` before starting again.
+Changing `POSTGRES_PASSWORD` after PostgreSQL has initialized its persistent volume does not change the database user's stored password. Either update the database credentials separately or remove the local volume with the cleanup command for the Compose configuration that started it, as described below.
 
 For production, use a unique secret supplied by the deployment environment or a secret manager; do not use the development value from `.env.example`.
 
@@ -51,6 +51,21 @@ Start only PostgreSQL in Docker:
 docker compose -f docker-compose.db.yml up -d
 ```
 
+Stop the database-only environment with the same Compose file:
+
+```powershell
+docker compose -f docker-compose.db.yml down
+```
+
+To remove its persistent volume and reinitialize PostgreSQL with the current `.env` credentials and schema, run:
+
+```powershell
+docker compose -f docker-compose.db.yml down -v
+docker compose -f docker-compose.db.yml up -d
+```
+
+The Compose file used for cleanup must match the one used to start the environment. Plain `docker compose down -v` targets the full stack in `docker-compose.yml`; it does not remove the `postgres` service created by `docker-compose.db.yml`. Mixing the commands can leave `filesystem-postgres-1` attached to the shared network and volume, causing Docker to report that those resources are still in use.
+
 Run the API on the port used by the frontend development proxy:
 
 ```powershell
@@ -68,6 +83,22 @@ npm run dev
 Open `http://localhost:5173`.
 
 ## Tests and checks
+
+To run the complete test suite—including backend and frontend unit tests, PostgreSQL integration tests, and Playwright—run this command from the repository root:
+
+```powershell
+.\run-all-tests.ps1
+```
+
+The script creates an isolated PostgreSQL Compose project on port `54329`, runs every suite, and removes its container and volume afterward. The port can be overridden if necessary:
+
+```powershell
+.\run-all-tests.ps1 -PostgresPort 54330
+```
+
+Docker Desktop must be running. The script installs Playwright's Chromium browser if it is not already available.
+
+Individual checks can also be run manually:
 
 ```powershell
 # Backend
@@ -92,6 +123,13 @@ dotnet run --project backend/F24 --urls http://localhost:5000
 # In another terminal
 cd frontend
 npm run test:e2e
+```
+
+PostgreSQL integration tests run when `RUN_POSTGRES_INTEGRATION_TESTS=true`. They reset the configured database schema, so use only the disposable test database above. With that database running:
+
+```powershell
+$env:RUN_POSTGRES_INTEGRATION_TESTS = 'true'
+dotnet test backend/F24.sln
 ```
 
 ## API documentation

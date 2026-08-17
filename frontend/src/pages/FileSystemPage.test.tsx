@@ -110,7 +110,7 @@ describe('FileSystemPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('searches with the selected scope and opens a result in its parent folder', async () => {
+  it('searches by all-file prefix or exact name in the current folder and opens a result', async () => {
     vi.mocked(searchFiles).mockResolvedValue([
       { id: 'file-id', name: 'Readme.txt', path: 'home/documents/Readme.txt', parentId: documentsId }
     ]);
@@ -118,9 +118,9 @@ describe('FileSystemPage', () => {
 
     await screen.findByRole('button', { name: /documents/i });
     fireEvent.change(screen.getByLabelText('Search files'), { target: { value: 'read' } });
-    await waitFor(() => expect(searchFiles).toHaveBeenCalledWith('read', rootId));
-    fireEvent.change(screen.getByLabelText('Search scope'), { target: { value: 'all' } });
-    await waitFor(() => expect(searchFiles).toHaveBeenCalledWith('read', undefined));
+    await waitFor(() => expect(searchFiles).toHaveBeenCalledWith('read', 'PrefixAll', undefined));
+    fireEvent.change(screen.getByLabelText('Search scope'), { target: { value: 'exact-current' } });
+    await waitFor(() => expect(searchFiles).toHaveBeenCalledWith('read', 'ExactCurrent', rootId));
 
     fireEvent.click(await screen.findByRole('button', { name: /Readme.txt/i }));
     await expectPath('home/documents');

@@ -12,6 +12,12 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: f24
+      POSTGRES_USER: f24
+      POSTGRES_PASSWORD: f24-test-password
+      POSTGRES_PORT: 5432
+      RUN_POSTGRES_INTEGRATION_TESTS: true
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +35,19 @@ jobs:
       - run: dotnet restore backend/F24.sln
       - run: dotnet format backend/F24.sln --verify-no-changes --no-restore
       - run: dotnet build backend/F24.sln --no-restore
+
+      - name: Start PostgreSQL for integration tests
+        run: docker compose -f docker-compose.db.yml up -d
+
+      - name: Wait for PostgreSQL
+        run: |
+          for attempt in {1..30}; do
+            if docker compose -f docker-compose.db.yml exec -T postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"; then exit 0; fi
+            sleep 1
+          done
+          docker compose -f docker-compose.db.yml logs postgres
+          exit 1
+
       - run: dotnet test backend/F24.sln --no-build
 
       # The current project owns its database schema in db/schema.sql, not EF migrations.

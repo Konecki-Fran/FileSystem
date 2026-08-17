@@ -24,7 +24,7 @@ export function FileSystemPage({ rootId }: Props) {
   const [selected, setSelected] = useState<Entry | undefined>();
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [scope, setScope] = useState<SearchScope>('subtree');
+  const [scope, setScope] = useState<SearchScope>('all-prefix');
   const debouncedSearch = useDebounce(search.trim(), 200);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,7 +32,12 @@ export function FileSystemPage({ rootId }: Props) {
 
   const folder = useCurrentFolder(folderId);
   const searchError = search ? validateName(search) : undefined;
-  const searchResult = useFileSearch(searchError ? '' : debouncedSearch, scope === 'subtree' ? folderId : undefined);
+  const searchMode = scope === 'exact-current' ? 'ExactCurrent' : 'PrefixAll';
+  const searchResult = useFileSearch(
+    searchError ? '' : debouncedSearch,
+    searchMode,
+    scope === 'exact-current' ? folderId : undefined
+  );
 
   if (folder.isLoading) return <LoadingSpinner />;
   if (folder.isError) return <ErrorMessage message={folder.error.message} />;

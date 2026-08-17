@@ -35,7 +35,7 @@ test('navigates, creates and deletes a folder, then searches across the filesyst
   await expect(deleteDialog).toBeHidden();
   await expect(createdFolder).toBeHidden();
 
-  await page.getByLabel('Search scope').selectOption('all');
+  await page.getByLabel('Search scope').selectOption('all-prefix');
   await page.getByLabel('Search files').fill('f24');
   const result = page.getByRole('button', { name: /f24-notes\.md/i });
   await expect(result).toBeVisible();
